@@ -3,10 +3,10 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Kamiwaza | Book your installation</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f5f7f6;color:#17372b;font:16px system-ui,sans-serif}main,footer{max-width:1200px;margin:auto;padding:0 16px}.help{display:flex;justify-content:flex-end;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 24px;font-size:12px;color:#50675c}.help p{margin:0}.help a,footer a{color:#195b3e}iframe{display:block;width:100%;height:1120px;border:0;background:#f5f7f6}footer{display:flex;gap:24px;padding:20px 40px;font-size:12px;color:#637b6e}a:focus-visible{outline:3px solid #0dcc8a;outline-offset:4px}@media(max-width:650px){main{padding:0}.help{padding:12px 18px}iframe{height:1750px}}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f6;color:#17372b;font:16px system-ui,sans-serif}main,footer{max-width:1200px;margin:auto;padding:0 16px}.help{display:flex;justify-content:flex-end;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 24px;font-size:12px;color:#50675c}.help p{margin:0}.help a,footer a{color:#195b3e}iframe{visibility:hidden;display:block;width:100%;height:1120px;border:0;background:#f5f7f6}footer{display:flex;gap:24px;padding:20px 40px;font-size:12px;color:#637b6e}a:focus-visible{outline:3px solid #0dcc8a;outline-offset:4px}@media(max-width:650px){main{padding:0}.help{padding:12px 18px}iframe{height:1750px}}
 </style></head><body>
 <main>
-<div class="help"><p id="frameStatus" role="status">Google sign-in may be required.</p><a href="https://script.google.com/a/macros/kamiwaza.ai/s/AKfycbz_udUAhvMcIz2xGFACh50JS7-XB6WtGKF6k-oBnZDx8QKw8xPzed9SI67DQoSOGeJq/exec" target="_blank" rel="noopener noreferrer">Having trouble? Open booking in a new tab ↗</a></div>
+<div class="help"><p id="frameStatus" role="status">Opening booking… If needed, you’ll be taken to Google to sign in.</p><a href="https://script.google.com/a/macros/kamiwaza.ai/s/AKfycbz_udUAhvMcIz2xGFACh50JS7-XB6WtGKF6k-oBnZDx8QKw8xPzed9SI67DQoSOGeJq/exec" target="_blank" rel="noopener noreferrer">Having trouble? Open booking in a new tab ↗</a></div>
 <iframe id="booking" title="Kamiwaza installation booking" src="https://script.google.com/a/macros/kamiwaza.ai/s/AKfycbz_udUAhvMcIz2xGFACh50JS7-XB6WtGKF6k-oBnZDx8QKw8xPzed9SI67DQoSOGeJq/exec?embedded=1" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 <noscript><p>Please <a href="https://script.google.com/a/macros/kamiwaza.ai/s/AKfycbz_udUAhvMcIz2xGFACh50JS7-XB6WtGKF6k-oBnZDx8QKw8xPzed9SI67DQoSOGeJq/exec">open the booking page</a> to continue.</p></noscript>
 </main><footer><a href="https://www.kamiwaza.ai/">Kamiwaza</a><a href="https://www.kamiwaza.ai/privacy-policy">Privacy</a></footer>
@@ -15,10 +15,17 @@
 if(window.top!==window.self){document.body.replaceChildren();throw Error('Open this page directly.');}
 const googleOrigin=origin=>origin==='https://script.google.com'||origin==='https://script.googleusercontent.com'||/^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(origin);
 let child=null,nonce=null;
+const bookingFrame=document.querySelector('#booking');
+const fallback=setTimeout(()=>{
+ document.querySelector('#frameStatus').textContent='Opening the booking page directly…';
+ window.location.replace(bookingFrame.src.split('?')[0]);
+},6000);
 window.addEventListener('message',e=>{
  if(!googleOrigin(e.origin)||typeof e.data?.nonce!=='string'||e.data.nonce.length>100)return;
  if(e.data.type==='kamiwaza-booking-ready'){
   child=e.source;nonce=e.data.nonce;e.source.postMessage({type:'kamiwaza-booking-approved',nonce},e.origin);
+  clearTimeout(fallback);
+  bookingFrame.style.visibility='visible';
   document.querySelector('#frameStatus').hidden=true;
  }
  if(e.data.type==='kamiwaza-booking-size'&&e.source===child&&e.data.nonce===nonce&&Number.isFinite(e.data.height))document.querySelector('#booking').style.height=Math.min(5000,Math.max(850,e.data.height+32))+'px';
